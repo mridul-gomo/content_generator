@@ -1,0 +1,28 @@
+name: Run Google Sheets Script
+
+on:
+  workflow_dispatch: # Allows you to manually trigger the workflow
+  schedule:
+    - cron: '0 9 * * *' # Optional: Runs every day at 9 AM UTC
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the Python script
+        env:
+          YOUR_GOOGLE_SERVICE_ACCOUNT: ${{ secrets.YOUR_GOOGLE_SERVICE_ACCOUNT }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scriptrev.py

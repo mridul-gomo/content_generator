@@ -89,6 +89,10 @@ def generate_openai_content(prompt, content_a, content_b):
     openai.api_key = openai_api_key
 
     try:
+        logging.info(f"Sending request to OpenAI API with the following prompt:\n{prompt}")
+        logging.info(f"Content A: {content_a}")
+        logging.info(f"Content B: {content_b}")
+
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
@@ -97,6 +101,7 @@ def generate_openai_content(prompt, content_a, content_b):
             ],
             max_tokens=1000
         )
+        logging.info(f"OpenAI API response received: {response}")
         return response.choices[0].message.content
     except Exception as e:
         logging.exception("Failed to generate content with OpenAI:")

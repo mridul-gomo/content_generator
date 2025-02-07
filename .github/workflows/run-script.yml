@@ -1,8 +1,12 @@
-name: Run Script via Webhook
+name: Run Script via Button
 
 on:
-  workflow_dispatch: # Manual trigger
-  repository_dispatch: # Webhook trigger
+  workflow_dispatch:
+    inputs:
+      trigger_reason:
+        description: "Reason for triggering the workflow"
+        required: false
+        default: "Triggered from Google Sheets Button"
 
 jobs:
   run_script:

@@ -3,6 +3,7 @@ import json
 import openai
 import gspread
 import time
+from flask import Flask, request, jsonify
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -14,8 +15,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 import logging
 from selenium.webdriver.chrome.options import Options
 
-# Configure logging with detailed exception information
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Flask app setup
+app = Flask(__name__)
 
 # Load Google Sheets API credentials securely from GitHub secret
 def load_gsheet_credentials():
@@ -106,8 +110,8 @@ def generate_openai_content(prompt, content_a, content_b):
 def update_gsheet(sheet, row, meta_title, meta_desc, new_content):
     try:
         sheet.update_cell(row, 4, meta_title)     # Column D
-        sheet.update_cell(row, 5, meta_desc)        # Column E
-        sheet.update_cell(row, 6, new_content)      # Column F
+        sheet.update_cell(row, 5, meta_desc)     # Column E
+        sheet.update_cell(row, 6, new_content)   # Column F
         logging.info(f"Successfully updated row {row} in Google Sheets.")
     except Exception as e:
         logging.exception(f"Failed to update Google Sheets at row {row}:")
@@ -117,10 +121,10 @@ def main():
     try:
         client = load_gsheet_credentials()
         # Replace with your actual Google Sheet ID
-        sheet = client.open_by_key('1Ym_nCIpKfp-5EXyvu38x0cAuMGAbF674Dor2wHk8fOM').sheet1
+        sheet_id = '1Ym_nCIpKfp-5EXyvu38x0cAuMGAbF674Dor2wHk8fOM'
+        sheet = client.open_by_key(sheet_id).sheet1
 
         rows = sheet.get_all_values()
-        # Process each row after the header row
         for idx, row in enumerate(rows[1:], start=2):
             url = row[0].strip() if len(row) > 0 else ""
             provided_content = row[1].strip() if len(row) > 1 else ""
@@ -131,19 +135,16 @@ def main():
                 scraped_content = scrape_page_content(url)
 
                 if scraped_content:
-                    # Build the updated prompt instructing OpenAI to generate webpage content in Danish with the desired structure.
                     prompt = (
                         "You are an SEO expert. Please generate webpage content in Danish with the following structure:\n\n"
-                        "Meta Title: A concise title around 60-70 characters (do not include labels).\n"
-                        "Meta Description: A short description around 130-150 characters (do not include labels).\n"
+                        "Meta Title: A concise title around 60-70 characters.\n"
+                        "Meta Description: A short description around 130-150 characters.\n"
                         "Optimized Content: A detailed, engaging, and persuasive text divided into clear paragraphs. "
                         "Naturally integrate the provided keywords and ensure that the phrase 'Volvo genuine parts' is included.\n\n"
-                        "Do not include any extra labels or example texts in your output."
                     )
                     if keywords:
                         prompt += f" Also, include the following keywords: {keywords}."
-                    
-                    # Use the scraped content and the (optional) provided content for generation
+
                     generated_content = generate_openai_content(prompt, scraped_content, provided_content)
 
                     if generated_content:
@@ -158,5 +159,15 @@ def main():
     except Exception as e:
         logging.exception("An error occurred in the main process:")
 
+# Flask endpoint to trigger the script
+@app.route("/", methods=["POST"])
+def trigger_script():
+    try:
+        main()
+        return jsonify({"status": "success", "message": "Script executed successfully!"})
+    except Exception as e:
+        logging.exception("Error executing script:")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == "__main__":
-    main()
+    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

@@ -105,10 +105,11 @@ def generate_openai_content(prompt, content_a, content_b):
 # Update Google Sheets with generated content in columns D, E, and F
 def update_gsheet(sheet, row, meta_title, meta_desc, new_content):
     try:
+        logging.info(f"Updating row {row} with Title: {meta_title}, Description: {meta_desc}")
         sheet.update_cell(row, 4, meta_title)     # Column D
         sheet.update_cell(row, 5, meta_desc)     # Column E
         sheet.update_cell(row, 6, new_content)   # Column F
-        logging.info(f"Successfully updated row {row} in Google Sheets.")
+        logging.info(f"Successfully updated row {row}.")
     except Exception as e:
         logging.exception(f"Failed to update Google Sheets at row {row}:")
 
@@ -118,9 +119,13 @@ def main():
         client = load_gsheet_credentials()
         # Replace with your actual Google Sheet ID
         sheet_id = '1Ym_nCIpKfp-5EXyvu38x0cAuMGAbF674Dor2wHk8fOM'
+        logging.info(f"Connecting to Google Sheet with ID: {sheet_id}")
         sheet = client.open_by_key(sheet_id).sheet1
 
         rows = sheet.get_all_values()
+        logging.info(f"Number of rows found in the sheet: {len(rows)}")
+
+        # Process each row after the header row
         for idx, row in enumerate(rows[1:], start=2):
             url = row[0].strip() if len(row) > 0 else ""
             provided_content = row[1].strip() if len(row) > 1 else ""
@@ -145,6 +150,7 @@ def main():
 
                     if generated_content:
                         meta_title, meta_desc, final_content = process_generated_content(generated_content)
+                        logging.info(f"Generated content for row {idx}: Title={meta_title}, Description={meta_desc}")
                         update_gsheet(sheet, idx, meta_title, meta_desc, final_content)
                     else:
                         logging.warning(f"No content generated for row {idx}.")

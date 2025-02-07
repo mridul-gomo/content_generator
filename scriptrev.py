@@ -1,4 +1,5 @@
 import os
+import json
 import openai
 import gspread
 import time
@@ -16,12 +17,20 @@ from selenium.webdriver.chrome.options import Options
 # Configure logging with detailed exception information
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Load Google Sheets API credentials
+# Load Google Sheets API credentials securely from GitHub secret
 def load_gsheet_credentials():
     try:
-        SERVICE_ACCOUNT_FILE = 'your_google_service_account.json'  # Replace with your service account file path
+        # Load service account key from environment variable
+        service_account_info = os.getenv("YOUR_GOOGLE_SERVICE_ACCOUNT")
+        if not service_account_info:
+            raise ValueError("Missing Google Service Account key! Add it as a GitHub secret.")
+
+        # Parse the secret JSON string into a dictionary
+        creds_dict = json.loads(service_account_info)
+
+        # Authorize with Google Sheets API using the credentials
         SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-        creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
         logging.info("Google Sheets credentials loaded successfully.")
         return client
@@ -72,7 +81,7 @@ def process_generated_content(generated_content):
 
 # Generate content using OpenAI API
 def generate_openai_content(prompt, content_a, content_b):
-    # Load API key from environment variables
+    # Load OpenAI API key from environment variables
     openai_api_key = os.getenv("OPENAI_API_KEY")
     if not openai_api_key:
         raise ValueError("Missing OpenAI API key! Set the OPENAI_API_KEY environment variable.")

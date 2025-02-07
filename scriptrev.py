@@ -3,7 +3,6 @@ import json
 import openai
 import gspread
 import time
-from flask import Flask, request, jsonify
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -17,9 +16,6 @@ from selenium.webdriver.chrome.options import Options
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Flask app setup
-app = Flask(__name__)
 
 # Load Google Sheets API credentials securely from GitHub secret
 def load_gsheet_credentials():
@@ -159,15 +155,5 @@ def main():
     except Exception as e:
         logging.exception("An error occurred in the main process:")
 
-# Flask endpoint to trigger the script
-@app.route("/", methods=["POST"])
-def trigger_script():
-    try:
-        main()
-        return jsonify({"status": "success", "message": "Script executed successfully!"})
-    except Exception as e:
-        logging.exception("Error executing script:")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    main()

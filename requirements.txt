@@ -1,0 +1,6 @@
+openai
+gspread
+google-auth
+selenium
+webdriver-manager
+beautifulsoup4

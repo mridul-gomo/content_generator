@@ -105,7 +105,10 @@ def generate_openai_content(prompt, content_a, content_b):
 # Update Google Sheets with generated content in columns D, E, and F
 def update_gsheet(sheet, row, meta_title, meta_desc, new_content):
     try:
-        logging.info(f"Updating row {row} with Title: {meta_title}, Description: {meta_desc}")
+        logging.info(f"Attempting to update row {row} with the following data:")
+        logging.info(f"Meta Title: {meta_title}")
+        logging.info(f"Meta Description: {meta_desc}")
+        logging.info(f"Optimized Content: {new_content}")
         sheet.update_cell(row, 4, meta_title)     # Column D
         sheet.update_cell(row, 5, meta_desc)     # Column E
         sheet.update_cell(row, 6, new_content)   # Column F
@@ -121,6 +124,7 @@ def main():
         sheet_id = '1Ym_nCIpKfp-5EXyvu38x0cAuMGAbF674Dor2wHk8fOM'
         logging.info(f"Connecting to Google Sheet with ID: {sheet_id}")
         sheet = client.open_by_key(sheet_id).sheet1
+        logging.info(f"Connected to Google Sheet: {sheet.title}")
 
         rows = sheet.get_all_values()
         logging.info(f"Number of rows found in the sheet: {len(rows)}")
